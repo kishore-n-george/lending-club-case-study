@@ -33,7 +33,7 @@
 - Charged off proportion increases as interest rate increases.
 - Charged off proportion increases as revolving line utilisation rate increases.
 - Charged off proportion increases as number of open credit line increases.
-For more information refer to [Lending Club case study presentation](./100095_kishore_george.pdf)
+- For more information refer to [Lending Club case study presentation](./100095_kishore_george.pdf)
 
 General observations:
 
