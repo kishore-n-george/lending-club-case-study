@@ -20,11 +20,19 @@
 
 ## Conclusions
 
-- 
-- Conclusion 1 from the analysis
-- Conclusion 2 from the analysis
-- Conclusion 3 from the analysis
-- Conclusion 4 from the analysis
+- Charged off proportion is higher for applicants with one or two derogatory public records.
+- Charged off proportion is higher for applicants with two bankruptcy records.
+- Charged off proprtion is higher for loans given to small businesses.
+- Charged off proportion is higher for loans with Grade G.
+  - As we move across the grades from A to F the fully paid proprtion falls.
+- Charged off proportion is higher for loans with Subgrade F5.
+  - As we move across the sub grades from A1 to F5 the fully paid proprtion falls.
+- Charged off proportion is higher for applicants with less than one year of work experience.
+- Charged off proportion is higher for long term(60) loans.
+General observations:
+- Lenders invest higher value in riskier loans(Grade G) with higher interest rates.
+- Interest rate increases as the loan grade degrades.
+- Most Loans are for debt consolidation.
 
 ## Technologies Used
 
