@@ -20,6 +20,7 @@
 
 ## Conclusions
 
+- 
 - Conclusion 1 from the analysis
 - Conclusion 2 from the analysis
 - Conclusion 3 from the analysis
@@ -38,7 +39,7 @@
 
 ## Contact
 
-Created by [@kishore-n-george] - feel free to contact me!
+Created by [Kishore](https://github.com/kishore-n-george) - feel free to contact me!
 
 ## Local setup of repository with vscode
 
