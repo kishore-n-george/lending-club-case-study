@@ -23,8 +23,6 @@ loan.info(verbose=True, show_counts=True)
 
 """Data Cleaning"""
 
-loan['int_rate'].unique()
-
 # check for duplicate rows based on id
 any_duplicates=loan.duplicated(['id']).any()
 print(any_duplicates)
@@ -263,6 +261,29 @@ loan.describe()
 # Find the correlation
 loan.corr()
 
+"""Business driven derived metrics"""
+
+loan['open_acc'].unique()
+
+# Derived columns
+
+# categorise loan amounts into buckets which will help in analysis further in bivariate analysis.
+# loan['loan_amnt'].describe()
+# using percentile values to create categories
+loan['loan_amnt_cat'] = pd.cut(loan['loan_amnt'], [0, 5400, 10000, 15000, 25000, 35000], labels=['0-5400', '5400-10000', '10000-15000', '15000-25000', '25000 +'])
+# categorise interest rate into buckets which will help in analysis further in bivariate analysis.
+# loan['int_rate'].describe()
+# using percentile values to create categories
+loan['int_rate_cat'] = pd.cut(loan['int_rate'], [0, 9, 12, 15, 18, 25], labels=['0-9', '9-12', '12-15', '15-18', '18 +'])
+# categorise annual income into buckets which will help in analysis further in bivariate analysis.
+# using percentile values to create categories
+# loan['annual_inc'].describe()
+loan['annual_inc_cat'] = pd.cut(loan['annual_inc'], [0,20000, 40000, 60000, 80000, 100000], labels=['0-20000', '20000-40000', '40000-60000', '60000-80000', '80000 +'])
+# categorise revol util into buckets which will help in analysis further in bivariate analysis.
+loan['revol_util_cat'] = pd.cut(loan['revol_util'], [0,20, 40, 60,80,100], labels=['0-20','20-40', '40-60', '60-80', '80-100'])
+# categorise open acc into buckets which will help in analysis further in bivariate analysis.
+loan['open_acc_cat'] = pd.cut(loan['revol_util'], [0,10, 20, 30,40,50], labels=['0-10','10-20', '20-30', '30-40', '40+'])
+
 """**Univariate Analysis**"""
 
 # Univariate analysis
@@ -272,14 +293,17 @@ import matplotlib.pyplot as plt
 sns.set_style("dark")
 columns_list_remove = set(())
 
+def draw_custom_hist_plot(df,x,xlabel,ylabel):
+  plt.figure(figsize=(15,8),facecolor='lightblue')
+  hplot = sns.histplot(df[x])
+  hplot.set_title(f'{xlabel} - Hist Plot',fontsize=14,color='black')
+  hplot.set_xlabel(xlabel,fontsize=14,color='b')
+  hplot.set_ylabel(ylabel,fontsize=14,color='b')
+  return hplot
+
 """Univariate Analysis of Application Type - Categorical Variable"""
 
-plt.figure(figsize=(15,8),facecolor='lightblue')
-hplot = sns.histplot(loan['application_type'])
-hplot.set_title('Application Type - Hist Plot',fontsize=14,color='black')
-hplot.set_xlabel('Application Type',fontsize=14,color='b')
-hplot.set_ylabel('Count',fontsize=14,color='b')
-# has only Individual -> add to list of columns to be removed
+draw_custom_hist_plot(loan,'application_type','Application Type','Count')
 columns_list_remove.add('application_type')
 
 # Inference: 
@@ -287,26 +311,16 @@ columns_list_remove.add('application_type')
 
 """Univariate Analysis of Payment Plan - Categorical Variable"""
 
-plt.figure(figsize=(15,8),facecolor='lightblue')
-hplot = sns.histplot(loan['pymnt_plan'])
-hplot.set_title('Payment Plan - Hist Plot',fontsize=14,color='black')
-hplot.set_xlabel('Payment Plan',fontsize=14,color='b')
-hplot.set_ylabel('Count',fontsize=14,color='b')
-# has only n -> add to list of columns to be removed
+draw_custom_hist_plot(loan,'pymnt_plan','Payment Plan','Count')
 columns_list_remove.add('pymnt_plan')
 
 # Inference: 
-# - all the applications had no payment plan put in place.
+# - No application had a payment plan put in place.
 
 """Univariate Analysis on State - Categorical Variable"""
 
 # shows the state with maximum # of loan applications
-plt.figure(figsize=(15,8),facecolor='lightblue')
-hplot = sns.histplot(loan['addr_state'])
-# hplot.bar_label(hplot.containers[0])
-hplot.set_title('State - Hist Plot',fontsize=14,color='black')
-hplot.set_xlabel('State',fontsize=14,color='b')
-hplot.set_ylabel('Count',fontsize=14,color='b')
+draw_custom_hist_plot(loan,'addr_state','State','Count')
 # Inference:
 # - State CA has the most number of applications
 
@@ -350,11 +364,8 @@ loan['chargeoff_within_12_mths'].unique()
 # has only zeroes-> add 'chargeoff_within_12_mths' to list of columns to be removed
 columns_list_remove.add('chargeoff_within_12_mths')
 # loan['collection_recovery_fee'].unique()
-plt.figure(figsize=(15,10),facecolor='lightblue')
-plt.ticklabel_format(style='plain', axis='x')
-hplot = sns.histplot(loan['collection_recovery_fee'],bins=2)
-hplot.set_title('Collection Recovery Fee - Hist Plot',fontsize=14,color='black')
-hplot.set_xlabel('Collection Recovery Fee',fontsize=14,color='b')
+draw_custom_hist_plot(loan,'collection_recovery_fee','Collection Recovery Fee','Count')
+
 # inference -> most collection recovery fee is under 3500
 
 """Univariate analysis on collections_12_mths_ex_med and delinq_2yrs - Quantitative Variables
@@ -365,12 +376,8 @@ delinq_2yrs: The past-due amount owed for the accounts on which the borrower is 
 loan['collections_12_mths_ex_med'].unique()
 # has only zeroes-> add 'collections_12_mths_ex_med' to list of columns to be removed
 columns_list_remove.add('collections_12_mths_ex_med')
+draw_custom_hist_plot(loan,'delinq_2yrs','Delinq 2 years','Count')
 
-plt.figure(figsize=(15,10),facecolor='lightblue')
-hplot = sns.histplot(loan['delinq_2yrs'])
-# hplot.bar_label(hplot.containers[0])
-hplot.set_title('Delinq  - Hist Plot',fontsize=14,color='black')
-hplot.set_xlabel('Delinq 2 years',fontsize=14,color='b')
 # Inference
 # - atleast 35000 applications have deliquent borrowers
 
@@ -382,30 +389,23 @@ dti: A ratio calculated using the borrower’s total monthly debt payments on th
 loan['delinq_amnt'].unique()
 # has only zeroes-> add 'delinq_amnt' to list of columns to be removed
 columns_list_remove.add('delinq_amnt')
-plt.figure(figsize=(15,10),facecolor='lightblue')
-hplot = sns.histplot(loan['dti'])
-hplot.set_title('DTI  - Hist Plot',fontsize=14,color='black')
-hplot.set_xlabel('DTI',fontsize=14,color='b')
+draw_custom_hist_plot(loan,'dti','DTI','Count')
+
 # Inference 
 # - distribution of dti among applications
 
 """Univariate analysis on derived column earliest_cr_line_year - Derived Ordered Categorical variable"""
 
 # earliest_cr_line -> The year the borrower's earliest reported credit line was opened
-plt.figure(figsize=(15,10),facecolor='lightblue')
-hplot = sns.histplot(loan['earliest_cr_line_year'])
-hplot.set_title('Earliest CR Line  - Hist Plot',fontsize=14,color='black')
-hplot.set_xlabel('Year',fontsize=14,color='b')
+draw_custom_hist_plot(loan,'earliest_cr_line_year','Earliest CR Line Year','Count')
+
 # inference
 # - most credit lines were opened in 2000
 
 """Univariate Analysis on Emp Length - Ordered Categorical Variable"""
 
-plt.figure(figsize=(15,10),facecolor='lightblue')
-hplot = sns.histplot(loan['emp_length'])
-# hplot.bar_label(hplot.containers[0])
-hplot.set_title('Employee Experience  - Hist Plot',fontsize=14,color='black')
-hplot.set_xlabel('Years',fontsize=14,color='b')
+draw_custom_hist_plot(loan,'emp_length','Employee Experience (Years)','Count')
+
 # inference 
 # - most loan applications have applicants with more than 10 years of work experience
 
@@ -421,6 +421,7 @@ bplot.ticklabel_format(style='plain', axis='y')
 bplot.set_title('Funded Amount - Box Plot',fontsize=14,color='black')
 bplot.set_ylabel('Funded Amount',fontsize=14,color='b')
 plt.subplot(2, 2, 2)
+# draw_custom_hist_plot(loan,'funded_amnt','Funded Amount','Count')
 hplot = sns.histplot(loan['funded_amnt'])
 hplot.ticklabel_format(style='plain', axis='x')
 hplot.set_title('Funded Amount - Hist Plot',fontsize=14,color='black')
@@ -444,10 +445,12 @@ bplot.ticklabel_format(style='plain', axis='y')
 bplot.set_title('Funded Amount Invested - Box Plot',fontsize=14,color='black')
 bplot.set_ylabel('Funded Amount Invested',fontsize=14,color='b')
 plt.subplot(2, 2, 2)
+# hplot = draw_custom_hist_plot(loan,'funded_amnt_inv','Funded Amount Invested ','Count')
 hplot = sns.histplot(loan['funded_amnt_inv'])
 hplot.ticklabel_format(style='plain', axis='x')
 hplot.set_title('Funded Amount Invested - Hist Plot',fontsize=14,color='black')
 hplot.set_xlabel('Funded Amount Invested',fontsize=14,color='b')
+hplot.set_ylabel('Count',fontsize=14,color='b')
 
 # Inference 
 # - distribution of funded amount Invested
@@ -457,22 +460,14 @@ hplot.set_xlabel('Funded Amount Invested',fontsize=14,color='b')
 """Univariate analysis on Grade - Ordered Categorical Variable"""
 
 # grade -> LC assigned loan grade
-plt.figure(figsize=(15,10),facecolor='lightblue')
-hplot = sns.histplot(loan['grade'])
-hplot.set_title('Loan Grade - Hist Plot',fontsize=14,color='black')
-hplot.set_xlabel('Loan Grade',fontsize=14,color='b')
-# hplot.bar_label(hplot.containers[0])
+draw_custom_hist_plot(loan,'grade','Loan Grade','Count')
 
 # Inference
 # - most number of applications have B grade
 
 """Univariate analysis on home_ownership - Categorical Variable"""
 
-plt.figure(figsize=(15,10),facecolor='lightblue')
-hplot = sns.histplot(loan['home_ownership'])
-# hplot.bar_label(hplot.containers[0])
-hplot.set_title('Home Ownership - Hist Plot',fontsize=14,color='black')
-hplot.set_xlabel('Home Ownership',fontsize=14,color='b')
+draw_custom_hist_plot(loan,'home_ownership','Home Ownership','Count')
 
 # Inference
 # - most number of applications have rented house
@@ -488,10 +483,12 @@ bplot.ticklabel_format(style='plain', axis='y')
 bplot.set_title('Interest Rate - Box Plot',fontsize=14,color='black')
 bplot.set_ylabel('Interest Rate',fontsize=14,color='b')
 plt.subplot(2, 2, 2)
+# draw_custom_hist_plot(loan,'int_rate','Interest Rate','Count')
 hplot = sns.histplot(loan['int_rate'])
 hplot.ticklabel_format(style='plain', axis='x')
 hplot.set_title('Interest Rate - Hist Plot',fontsize=14,color='black')
 hplot.set_xlabel('Interest Rate',fontsize=14,color='b')
+hplot.set_ylabel('Count',fontsize=14,color='b')
 # Inference
 # - most number of applications have 7.5 interest rate
 
@@ -506,6 +503,7 @@ bplot.ticklabel_format(style='plain', axis='y')
 bplot.set_title('Loan Amount - Box Plot',fontsize=14,color='black')
 bplot.set_ylabel('Loan Amount',fontsize=14,color='b')
 plt.subplot(2, 2, 2)
+# draw_custom_hist_plot(loan,'loan_amnt','Loan Amount','Count')
 hplot = sns.histplot(loan['loan_amnt'])
 hplot.ticklabel_format(style='plain', axis='x')
 hplot.set_title('Loan Amount - Hist Plot',fontsize=14,color='black')
@@ -518,11 +516,7 @@ hplot.set_xlabel('Loan Amount',fontsize=14,color='b')
 
 """Univariate analysis on Loan Status - Ordered Categorical variable"""
 
-plt.figure(figsize=(15,10),facecolor='lightblue')
-hplot = sns.histplot(loan['loan_status'])
-hplot.set_title('Loan Status - Hist Plot',fontsize=14,color='black')
-hplot.set_xlabel('Loan Status',fontsize=14,color='b')
-# hplot.bar_label(hplot.containers[0])
+draw_custom_hist_plot(loan,'loan_status','Loan Status','Count')
 
 # Inference 
 # - Most loans are fully paid
@@ -534,6 +528,7 @@ plt.figure(figsize=(15,10),facecolor='lightblue')
 hplot = sns.countplot(x=loan['pub_rec_bankruptcies'])
 hplot.set_title('Bankruptcies - Count Plot',fontsize=14,color='black')
 hplot.set_xlabel('Bankruptcies Count',fontsize=14,color='b')
+hplot.set_ylabel('Count',fontsize=14,color='b')
 # hplot.bar_label(hplot.containers[0])
 
 # Inference 
@@ -549,7 +544,8 @@ hplot = sns.countplot(x=loan['purpose'])
 # hplot.bar_label(hplot.containers[0])
 hplot.set_title('Purpose - Count Plot',fontsize=14,color='black')
 hplot.set_xlabel('Purpose',fontsize=14,color='b')
-
+hplot.set_ylabel('Count',fontsize=14,color='b')
+hplot.figure.savefig('purpose-count.png')
 # Inference 
 # - Most loan applications are for debt consolidation.
 
@@ -565,14 +561,18 @@ print(loan.shape)
 """
 
 # groupby purpose and find mean
+def draw_custom_bar_plot(x,y,xlabel,ylabel,x_rot=0):
+  plt.figure(figsize=(15,10),facecolor='lightblue')
+  plt.xticks(rotation=x_rot)
+  hplot = sns.barplot(x=x, y=y)
+  # hplot.bar_label(hplot.containers[0])
+  hplot.set_title(f'{xlabel} vs {ylabel} - Bar Plot',fontsize=14,color='black')
+  hplot.set_xlabel(xlabel,fontsize=14,color='b')
+  hplot.set_ylabel(ylabel,fontsize=14,color='b')
+  # hplot.bar_label(hplot.containers[0])
+  hplot.figure.savefig(f'{xlabel.replace(" ","")}.png')
 mean_amount_grouped_by_purpose = loan.groupby('purpose')['funded_amnt_inv'].mean()
-plt.figure(figsize=(15,10),facecolor='lightblue')
-plt.xticks(rotation=90)
-hplot = sns.barplot(x= mean_amount_grouped_by_purpose.index, y=mean_amount_grouped_by_purpose.values)
-# hplot.bar_label(hplot.containers[0])
-hplot.set_title('Mean Loan Amount Invested vs Purpose - Bar Plot',fontsize=14,color='black')
-hplot.set_xlabel('Purpose',fontsize=14,color='b')
-hplot.set_ylabel('Mean Loan Amount Invested',fontsize=14,color='b')
+draw_custom_bar_plot(mean_amount_grouped_by_purpose.index,mean_amount_grouped_by_purpose.values,'Purpose','Mean Loan Amount Invested',90)
 
 # inference
 # - Mean amount is high for house, debt_consolidation and small_business
@@ -581,13 +581,8 @@ hplot.set_ylabel('Mean Loan Amount Invested',fontsize=14,color='b')
 
 # groupby grade and find median
 median_amount_grouped_by_grade = loan.groupby('grade')['funded_amnt_inv'].median()
-plt.figure(figsize=(15,10),facecolor='lightblue')
-plt.xticks(rotation=90)
-hplot = sns.barplot(x= median_amount_grouped_by_grade.index, y=median_amount_grouped_by_grade.values)
-# hplot.bar_label(hplot.containers[0])
-hplot.set_title('Median Loan Amount Invested vs Grade - Bar Plot',fontsize=14,color='black')
-hplot.set_xlabel('Grade',fontsize=14,color='b')
-hplot.set_ylabel('Median Loan Amount Invested',fontsize=14,color='b')
+draw_custom_bar_plot(median_amount_grouped_by_grade.index,median_amount_grouped_by_grade.values,'Grade','Median Loan Amount Invested')
+
 # Inference
 # - Median amount is high for Grade G loans.
 # - Considering Grade G is poor quality loans, the lending club is risking by investing a higher amount of money in risky loans.
@@ -596,13 +591,8 @@ hplot.set_ylabel('Median Loan Amount Invested',fontsize=14,color='b')
 
 # groupby home ownership and find median
 median_amount_grouped_by_home = loan.groupby('home_ownership')['funded_amnt_inv'].median()
-plt.figure(figsize=(15,10),facecolor='lightblue')
-plt.xticks(rotation=90)
-hplot = sns.barplot(x= median_amount_grouped_by_home.index, y=median_amount_grouped_by_home.values)
-# hplot.bar_label(hplot.containers[0])
-hplot.set_title('Median Loan Amount Invested vs Home ownership - Bar Plot',fontsize=14,color='black')
-hplot.set_xlabel('Home Ownership',fontsize=14,color='b')
-hplot.set_ylabel('Median Loan Amount Invested',fontsize=14,color='b')
+draw_custom_bar_plot(median_amount_grouped_by_home.index,median_amount_grouped_by_home.values,'Home Ownership','Median Loan Amount Invested')
+
 # Inference
 # - Median amount is high for applicants with Mortgaged loans
 
@@ -725,22 +715,26 @@ def groupby_dimensions_and_count_values(loan_dataframe, dimension1,dimension2):
   print(df.head(6))
   return df
 
+def draw_custom_chart(df,x,y,hue,xlabel,ylabel,xrot=0):
+  plt.figure(figsize=(15,10),facecolor='lightblue')
+  hplot = sns.barplot(data = df, x = x ,y=y ,hue=hue)
+  hplot.set_xticklabels(
+      hplot.get_xticklabels(), 
+      horizontalalignment='center',
+      fontweight='light',
+      fontsize='x-large',
+      rotation=xrot, 
+
+  )
+  # hplot.bar_label(hplot.containers[0])
+  hplot.set_title(f'% of Loan Status grouped by {xlabel}  - Bar Plot',fontsize=14,color='black')
+  hplot.set_xlabel(xlabel,fontsize=14,color='b')
+  hplot.set_ylabel(ylabel,fontsize=14,color='b')
+  hplot.figure.savefig(f'{xlabel.replace(" ","")}.png')
+
 rec_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'pub_rec','loan_status')
 
-plt.figure(figsize=(15,10),facecolor='lightblue')
-hplot = sns.barplot(data = rec_groupedby_loan_status, x = "pub_rec",y="%",hue='status')
-hplot.set_xticklabels(
-    hplot.get_xticklabels(), 
-    rotation=90, 
-    horizontalalignment='center',
-    fontweight='light',
-    fontsize='x-large'
-
-)
-# hplot.bar_label(hplot.containers[0])
-hplot.set_title('% of Loan Status grouped by Number of derogatory Public Records - Bar Plot',fontsize=14,color='black')
-hplot.set_xlabel('Number of derogatory public records',fontsize=14,color='b')
-hplot.set_ylabel('%',fontsize=14,color='b')
+draw_custom_chart(rec_groupedby_loan_status,"pub_rec","%","status","Number of derogatory public records","%")
 
 # Inference
 # - No Charged off % for applicants with 3 0r 4 public derogatory records. 
@@ -752,20 +746,7 @@ hplot.set_ylabel('%',fontsize=14,color='b')
 # convert it to a dataframe to plot
 prec_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'pub_rec_bankruptcies','loan_status')
 
-plt.figure(figsize=(15,10),facecolor='lightblue')
-hplot = sns.barplot(data = prec_groupedby_loan_status, x = "pub_rec_bankruptcies",y="%",hue='status')
-hplot.set_xticklabels(
-    hplot.get_xticklabels(), 
-    rotation=90, 
-    horizontalalignment='center',
-    fontweight='light',
-    fontsize='x-large'
-
-)
-# hplot.bar_label(hplot.containers[0])
-hplot.set_title('% of Loan Status grouped by Number of Public Bankruptcy Records - Bar Plot',fontsize=14,color='black')
-hplot.set_xlabel('Number of public bankruptcy records',fontsize=14,color='b')
-hplot.set_ylabel('%',fontsize=14,color='b')
+draw_custom_chart(prec_groupedby_loan_status,"pub_rec_bankruptcies","%","status","Number of Public Bankruptcy Records","%")
 
 # Inference
 # - Charged off % is high for those with 2.0 public bankruptcy record
@@ -777,20 +758,7 @@ hplot.set_ylabel('%',fontsize=14,color='b')
 # convert it to a dataframe to plot
 purpose_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'purpose','loan_status')
 
-plt.figure(figsize=(15,10),facecolor='lightblue')
-hplot = sns.barplot(data = purpose_groupedby_loan_status, x = "purpose",y="%",hue='status')
-hplot.set_xticklabels(
-    hplot.get_xticklabels(), 
-    rotation=90, 
-    horizontalalignment='center',
-    fontweight='light',
-    fontsize='x-large'
-
-)
-# hplot.bar_label(hplot.containers[0])
-hplot.set_title('% of Loan Status grouped by Purpose - Bar Plot',fontsize=14,color='black')
-hplot.set_xlabel('Purpose of Loan',fontsize=14,color='b')
-hplot.set_ylabel('%',fontsize=14,color='b')
+draw_custom_chart(purpose_groupedby_loan_status,"purpose","%","status","Purpose","%","90")
 
 # Inference
 # - Charged off % is higher for small business
@@ -801,20 +769,7 @@ hplot.set_ylabel('%',fontsize=14,color='b')
 # convert it to a dataframe to plot
 grade_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'grade','loan_status')
 
-plt.figure(figsize=(15,10),facecolor='lightblue')
-hplot = sns.barplot(data = grade_groupedby_loan_status, x = "grade",y="%",hue='status')
-hplot.set_xticklabels(
-    hplot.get_xticklabels(), 
-    rotation=90, 
-    horizontalalignment='center',
-    fontweight='light',
-    fontsize='x-large'
-
-)
-# hplot.bar_label(hplot.containers[0])
-hplot.set_title('% of Loan Status grouped by Grade - Bar Plot',fontsize=14,color='black')
-hplot.set_xlabel('Grade',fontsize=14,color='b')
-hplot.set_ylabel('%',fontsize=14,color='b')
+draw_custom_chart(grade_groupedby_loan_status,"grade","%","status","Grade","%")
 
 # Inference
 # - Charged off % is higher for Grade G
@@ -826,24 +781,102 @@ hplot.set_ylabel('%',fontsize=14,color='b')
 # convert it to a dataframe to plot
 emp_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'emp_length','loan_status')
 
-plt.figure(figsize=(15,10),facecolor='lightblue')
-hplot = sns.barplot(data = emp_groupedby_loan_status, x = "emp_length",y="%",hue='status')
-hplot.set_xticklabels(
-    hplot.get_xticklabels(), 
-    rotation=90, 
-    horizontalalignment='center',
-    fontweight='light',
-    fontsize='x-large'
-
-)
-# hplot.bar_label(hplot.containers[0])
-hplot.set_title('% of Loan Status grouped by Work Experience - Bar Plot',fontsize=14,color='black')
-hplot.set_xlabel('Work Experience',fontsize=14,color='b')
-hplot.set_ylabel('%',fontsize=14,color='b')
+draw_custom_chart(emp_groupedby_loan_status,"emp_length","%","status","Work Experience","%")
 
 # Inference
 # - Charged off % is higher for applicants with 0-1 years of experience.
 # - Charged off proportion is almost same for 2 -6 years of experience.
+
+"""Sub Grade vs Loan Status"""
+
+# Group by subgrade,loan_status and count the loans per status
+# convert it to a dataframe to plot
+totalacc_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'sub_grade','loan_status')
+
+draw_custom_chart(totalacc_groupedby_loan_status,"sub_grade","%","status","Sub Grade","%","90")
+
+# Inference
+# - Charged off % is higher for Sub Grade F5
+# - Clearly as the Sub Grade moves from A1 to G5, the charged off proportion increases and fully paid proportion decreases.
+
+"""Term vs % of Loan status"""
+
+# Group by subgrade,loan_status and count the loans per status
+# convert it to a dataframe to plot
+term_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'term','loan_status')
+
+draw_custom_chart(term_groupedby_loan_status,"term","%","status","Term","%")
+
+# inference
+# - charged off proprtion is higher for loan with longer term
+
+"""Income Verification Status vs % of Loan status"""
+
+# Group by verification_status,loan_status and count the loans per status
+# convert it to a dataframe to plot
+ver_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'verification_status','loan_status')
+
+draw_custom_chart(ver_groupedby_loan_status,"verification_status","%","status","Income Verification Status","%")
+
+# inference
+# - Charged off percentage is similar for all the categories of income verification.
+
+"""Annual Income Category vs % of Loan Status"""
+
+# Group by annual_inc_cat,loan_status and count the loans per status
+# convert it to a dataframe to plot
+annual_inc_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'annual_inc_cat','loan_status')
+
+draw_custom_chart(annual_inc_groupedby_loan_status,"annual_inc_cat","%","status","Annual Income (Categorised)","%")
+
+# inference
+# - Charged off percentage is higher for loan applicants in annual income category 0-20000.
+# - Charged off percentage decreases as the annual income increases.
+
+"""Loan Amount (Categorised) vs % of Loan status"""
+
+# Group by loan_amnt_cat,loan_status and count the loans per status
+# convert it to a dataframe to plot
+loan_amnt_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'loan_amnt_cat','loan_status')
+
+draw_custom_chart(loan_amnt_groupedby_loan_status,"loan_amnt_cat","%","status","Loan Amount (Categorised)","%")
+
+# inference
+# - Charged off percentage is higher for higher loan amount.
+# - Fully paid percentage decreases as the loan amount increases.
+
+"""Interest Rate (Categorsied) vs % of Loan Status"""
+
+# Group by int_rate_cat,loan_status and count the loans per status
+# convert it to a dataframe to plot
+int_rate_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'int_rate_cat','loan_status')
+
+draw_custom_chart(int_rate_groupedby_loan_status,"int_rate_cat","%","status","Interest Rate (Categorised)","%")
+
+# inference
+# - Charged off percentage increases as the interest rate increases.
+
+"""Revolving Line Utilisation Rate vs % of Loan Status"""
+
+# Group by int_rate_cat,loan_status and count the loans per status
+# convert it to a dataframe to plot
+revol_rate_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'revol_util_cat','loan_status')
+
+draw_custom_chart(revol_rate_groupedby_loan_status,"revol_util_cat","%","status","Revolving Line Utilisation Rate (Categorised)","%")
+
+# inference
+# - Charged off percentage increases as the revolving line utilisation rate increases.
+
+"""Number of Open Credit Lines (Categorised) vs % of Loan status"""
+
+# Group by int_rate_cat,loan_status and count the loans per status
+# convert it to a dataframe to plot
+open_acc_groupedby_loan_status = groupby_dimensions_and_count_values(loan,'open_acc_cat','loan_status')
+
+draw_custom_chart(open_acc_groupedby_loan_status,"open_acc_cat","%","status","Number of Credit Lines (Categorised)","%")
+
+# inference
+# - Charged off percentage increases as the number of open credit lines increases.
 
 """Multivariate Analysis"""
 
@@ -855,7 +888,7 @@ loan_copy.head(6)
 plt.figure(figsize=(15,10),facecolor='lightblue')
 hplot = sns.heatmap(loan_copy.corr(),annot=True)
 hplot.set_title('Correlation matrix',fontsize=14,color='black')
-
+hplot.figure.savefig('corr.png')
 # inference
 
 # - There is a clear correlation between funded_amnt, loan_amount and loan_amount_inv.
