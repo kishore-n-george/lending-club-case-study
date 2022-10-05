@@ -56,11 +56,16 @@ General observations:
 
 Created by [Kishore](https://github.com/kishore-n-george) - feel free to contact me!
 
-## Local setup of repository with vscode
+## Local setup
 
 - Create a virtual env by running `python -m venv .venv`
 - Activate the venv by running `source ./.venv/bin/activate`
 - Install the dependencies by running `pip3 install -r requirements.txt`
+### To Run in vscode
+- In addition to the above steps , do th below
 - Run the following commnads to make jupyter notebook use the venv `pip3 install ipykernel`
 - `python3 -m ipykernel install --user --name=lending-club`
 - Restart vscode.
+### To run the python file
+- Run `python 100095_kishore_george.py`
+- This will generate the important charts as png and save it in the root folder.
