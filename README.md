@@ -62,7 +62,7 @@ Created by [Kishore](https://github.com/kishore-n-george) - feel free to contact
 - Activate the venv by running `source ./.venv/bin/activate`
 - Install the dependencies by running `pip3 install -r requirements.txt`
 ### To Run in vscode
-- In addition to the above steps , do th below
+- In addition to the above steps , do the below
 - Run the following commnads to make jupyter notebook use the venv `pip3 install ipykernel`
 - `python3 -m ipykernel install --user --name=lending-club`
 - Restart vscode.
